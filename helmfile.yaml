@@ -1,0 +1,352 @@
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  timeout: 900
+  createNamespace: true
+  historyMax: 5
+
+repositories:
+  - name: metallb
+    url: https://metallb.github.io/metallb
+  - name: frr-k8s
+    url: https://metallb.github.io/frr-k8s
+  - name: istio
+    url: https://istio-release.storage.googleapis.com/charts
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: metrics-server
+    url: https://kubernetes-sigs.github.io/metrics-server/
+  - name: kyverno
+    url: https://kyverno.github.io/kyverno/
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: opentelemetry
+    url: https://open-telemetry.github.io/opentelemetry-helm-charts
+  - name: kedacore
+    url: https://kedacore.github.io/charts
+  - name: external-secrets
+    url: https://charts.external-secrets.io
+  - name: fairwinds-stable
+    url: https://charts.fairwinds.com/stable
+
+releases:
+  # Storage and bare-metal load balancer foundations.
+  - name: local-path-provisioner
+    namespace: local-path-provisioner
+    chart: ./charts/local-path-provisioner
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: sh
+        args:
+          - -c
+          - kubectl create namespace local-path-provisioner --dry-run=client -o yaml | kubectl apply -f - && kubectl label namespace local-path-provisioner pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/warn=privileged --overwrite
+    values:
+      - storageClass:
+          create: true
+          defaultClass: true
+      - nodePathMap:
+          - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+            paths:
+              - /var/local-path-provisioner
+
+  - name: metallb
+    namespace: metallb-system
+    chart: ./charts/metallb
+    needs:
+      - local-path-provisioner/local-path-provisioner
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: sh
+        args:
+          - -c
+          - kubectl create namespace metallb-system --dry-run=client -o yaml | kubectl apply -f - && kubectl label namespace metallb-system pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/warn=privileged --overwrite
+      - events: ["postsync", "postapply"]
+        showlogs: true
+        command: sh
+        args:
+          - -c
+          - kubectl wait --for=condition=Available --timeout=300s -n metallb-system deployment/metallb-controller && kubectl apply -f metallb-config.yaml
+
+  # Istio control plane and ingress data plane.
+  - name: istio-base
+    namespace: istio-system
+    chart: istio/base
+    version: 1.30.2
+    values:
+      - defaultRevision: default
+
+  - name: istiod
+    namespace: istio-system
+    chart: istio/istiod
+    version: 1.30.2
+    needs:
+      - istio-system/istio-base
+    values:
+      - pilot:
+          autoscaleMin: 1
+          autoscaleMax: 3
+      - telemetry:
+          enabled: true
+
+  - name: istio-ingress
+    namespace: istio-ingress
+    chart: istio/gateway
+    version: 1.30.2
+    needs:
+      - istio-system/istiod
+      - metallb-system/metallb
+    values:
+      - service:
+          type: LoadBalancer
+
+  # Certificates, resource metrics and policy enforcement.
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.21.0
+    values:
+      - crds:
+          enabled: true
+      - prometheus:
+          enabled: true
+
+  - name: metrics-server
+    namespace: kube-system
+    chart: metrics-server/metrics-server
+    version: 3.13.1
+    values:
+      - args:
+          - --cert-dir=/tmp
+          - --secure-port=10250
+          - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+          - --kubelet-use-node-status-port
+          - --metric-resolution=15s
+          - --kubelet-insecure-tls
+
+  - name: kyverno
+    namespace: kyverno
+    chart: kyverno/kyverno
+    version: 3.8.2
+    values:
+      - admissionController:
+          replicas: 1
+      - backgroundController:
+          replicas: 1
+      - cleanupController:
+          replicas: 1
+      - reportsController:
+          replicas: 1
+
+  # Argo suite.
+  - name: argo-cd
+    namespace: argocd
+    chart: argo/argo-cd
+    version: 10.1.3
+    values:
+      - crds:
+          install: true
+          keep: true
+      - server:
+          service:
+            type: ClusterIP
+
+  - name: argo-rollouts
+    namespace: argo-rollouts
+    chart: argo/argo-rollouts
+    version: 2.41.0
+    values:
+      - dashboard:
+          enabled: true
+          service:
+            type: ClusterIP
+
+  - name: argocd-image-updater
+    namespace: argocd
+    chart: argo/argocd-image-updater
+    version: 1.2.4
+    needs:
+      - argocd/argo-cd
+
+  - name: argo-events
+    namespace: argo-events
+    chart: argo/argo-events
+    version: 2.4.22
+    values:
+      - crds:
+          install: true
+
+  - name: argo-workflows
+    namespace: argo-workflows
+    chart: argo/argo-workflows
+    version: 1.0.19
+    values:
+      - crds:
+          install: true
+      - server:
+          serviceType: ClusterIP
+
+  # Logs and metrics.
+  - name: loki
+    namespace: monitoring
+    chart: grafana/loki
+    version: 7.0.0
+    needs:
+      - local-path-provisioner/local-path-provisioner
+    values:
+      - deploymentMode: SingleBinary
+      - loki:
+          auth_enabled: false
+          commonConfig:
+            replication_factor: 1
+          schemaConfig:
+            configs:
+              - from: "2024-04-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
+          storage:
+            type: filesystem
+      - singleBinary:
+          replicas: 1
+          persistence:
+            enabled: true
+            storageClass: local-path
+            size: 20Gi
+      - read:
+          replicas: 0
+      - write:
+          replicas: 0
+      - backend:
+          replicas: 0
+      - chunksCache:
+          enabled: false
+      - resultsCache:
+          enabled: false
+
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: 87.15.1
+    needs:
+      - local-path-provisioner/local-path-provisioner
+      - monitoring/loki
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: sh
+        args:
+          - -c
+          - kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f - && kubectl label namespace monitoring pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/warn=privileged --overwrite
+    values:
+      - kubeEtcd:
+          enabled: false
+      - prometheus:
+          prometheusSpec:
+            retention: 15d
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 30Gi
+      - grafana:
+          persistence:
+            enabled: true
+            storageClassName: local-path
+            size: 10Gi
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-gateway.monitoring.svc.cluster.local
+              isDefault: false
+
+  # Telemetry collection. HPA itself is a native Kubernetes API and uses metrics-server.
+  - name: opentelemetry-collector
+    namespace: observability
+    chart: opentelemetry/opentelemetry-collector
+    version: 0.165.0
+    needs:
+      - monitoring/kube-prometheus-stack
+    values:
+      - mode: daemonset
+      - image:
+          repository: otel/opentelemetry-collector-contrib
+      - presets:
+          kubernetesAttributes:
+            enabled: true
+          kubeletMetrics:
+            enabled: true
+      - serviceMonitor:
+          enabled: true
+      - config:
+          exporters:
+            debug: {}
+          service:
+            pipelines:
+              traces:
+                receivers: [otlp]
+                processors: [memory_limiter, batch]
+                exporters: [debug]
+              metrics:
+                receivers: [otlp, prometheus]
+                processors: [memory_limiter, batch]
+                exporters: [debug]
+              logs:
+                receivers: [otlp]
+                processors: [memory_limiter, batch]
+                exporters: [debug]
+
+  # Autoscaling and right-sizing.
+  - name: keda
+    namespace: keda
+    chart: kedacore/keda
+    version: 2.20.1
+    values:
+      - crds:
+          install: true
+      - prometheus:
+          operator:
+            enabled: true
+
+  - name: vpa
+    namespace: vpa
+    chart: fairwinds-stable/vpa
+    version: 4.12.3
+    values:
+      - recommender:
+          enabled: true
+      - updater:
+          enabled: true
+      - admissionController:
+          enabled: true
+
+  - name: goldilocks
+    namespace: goldilocks
+    chart: fairwinds-stable/goldilocks
+    version: 10.4.1
+    needs:
+      - vpa/vpa
+    values:
+      - dashboard:
+          service:
+            type: ClusterIP
+
+  # External secret synchronization. SecretStore resources are environment-specific.
+  - name: external-secrets
+    namespace: external-secrets
+    chart: external-secrets/external-secrets
+    version: 2.7.0
+    values:
+      - installCRDs: true
