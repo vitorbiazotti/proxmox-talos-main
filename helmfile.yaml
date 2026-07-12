@@ -32,6 +32,12 @@ repositories:
     url: https://charts.external-secrets.io
   - name: fairwinds-stable
     url: https://charts.fairwinds.com/stable
+  - name: policy-reporter
+    url: https://kyverno.github.io/policy-reporter
+  - name: jenkins
+    url: https://charts.jenkins.io
+  - name: zabbix-community
+    url: https://zabbix-community.github.io/helm-zabbix
 
 releases:
   # Storage and bare-metal load balancer foundations.
@@ -375,3 +381,80 @@ releases:
     version: 2.7.0
     values:
       - installCRDs: true
+
+  # Kyverno policy reports and graphical user interface.
+  - name: policy-reporter
+    namespace: policy-reporter
+    chart: policy-reporter/policy-reporter
+    version: 3.8.1
+    needs:
+      - kyverno/kyverno
+    values:
+      - ui:
+          enabled: true
+      - plugin:
+          kyverno:
+            enabled: true
+      - monitoring:
+          enabled: true
+
+  # CI/CD server with persistent controller state and Kubernetes agents.
+  - name: jenkins
+    namespace: jenkins
+    chart: jenkins/jenkins
+    version: 5.9.33
+    needs:
+      - local-path-provisioner/local-path-provisioner
+    values:
+      - controller:
+          serviceType: ClusterIP
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+      - persistence:
+          enabled: true
+          storageClass: local-path
+          size: 20Gi
+
+  # Complete Zabbix stack for the homelab.
+  - name: zabbix
+    namespace: zabbix
+    chart: zabbix-community/zabbix
+    version: 7.1.0
+    needs:
+      - local-path-provisioner/local-path-provisioner
+    values:
+      - postgresAccess:
+          existingSecretName: zabbix-postgres-access
+      - postgresql:
+          enabled: true
+          persistence:
+            enabled: true
+            storageSize: 20Gi
+            storageClass: local-path
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+      - zabbixServer:
+          enabled: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+      - zabbixWeb:
+          enabled: true
+          service:
+            type: ClusterIP
+      - zabbixWebService:
+          enabled: true

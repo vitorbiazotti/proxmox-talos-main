@@ -15,6 +15,9 @@ spec:
     - workflows.home.arpa
     - rollouts.home.arpa
     - goldilocks.home.arpa
+    - kyverno.home.arpa
+    - jenkins.home.arpa
+    - zabbix.home.arpa
   duration: 8760h
   renewBefore: 720h
   privateKey:
@@ -46,6 +49,9 @@ spec:
         - workflows.home.arpa
         - rollouts.home.arpa
         - goldilocks.home.arpa
+        - kyverno.home.arpa
+        - jenkins.home.arpa
+        - zabbix.home.arpa
       tls:
         httpsRedirect: true
     - port:
@@ -59,6 +65,9 @@ spec:
         - workflows.home.arpa
         - rollouts.home.arpa
         - goldilocks.home.arpa
+        - kyverno.home.arpa
+        - jenkins.home.arpa
+        - zabbix.home.arpa
       tls:
         mode: SIMPLE
         credentialName: addons-home-tls
@@ -163,5 +172,56 @@ spec:
     - route:
         - destination:
             host: goldilocks-dashboard.goldilocks.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: kyverno
+  namespace: istio-ingress
+spec:
+  hosts:
+    - kyverno.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: policy-reporter-ui.policy-reporter.svc.cluster.local
+            port:
+              number: 8080
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: jenkins
+  namespace: istio-ingress
+spec:
+  hosts:
+    - jenkins.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: jenkins.jenkins.svc.cluster.local
+            port:
+              number: 8080
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: zabbix
+  namespace: istio-ingress
+spec:
+  hosts:
+    - zabbix.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: zabbix-zabbix-web.zabbix.svc.cluster.local
             port:
               number: 80

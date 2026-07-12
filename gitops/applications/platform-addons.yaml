@@ -748,3 +748,137 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: policy-reporter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  project: default
+  source:
+    repoURL: https://kyverno.github.io/policy-reporter
+    chart: policy-reporter
+    targetRevision: 3.8.1
+    helm:
+      releaseName: policy-reporter
+      values: |
+        ui:
+          enabled: true
+        plugin:
+          kyverno:
+            enabled: true
+        monitoring:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: policy-reporter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jenkins.io
+    chart: jenkins
+    targetRevision: 5.9.33
+    helm:
+      releaseName: jenkins
+      values: |
+        controller:
+          serviceType: ClusterIP
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: '2'
+              memory: 3Gi
+        persistence:
+          enabled: true
+          storageClass: local-path
+          size: 20Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jenkins
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zabbix
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  project: default
+  source:
+    repoURL: https://zabbix-community.github.io/helm-zabbix
+    chart: zabbix
+    targetRevision: 7.1.0
+    helm:
+      releaseName: zabbix
+      values: |
+        postgresAccess:
+          existingSecretName: zabbix-postgres-access
+        postgresql:
+          enabled: true
+          persistence:
+            enabled: true
+            storageSize: 20Gi
+            storageClass: local-path
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: '1'
+              memory: 2Gi
+        zabbixServer:
+          enabled: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: '1'
+              memory: 2Gi
+        zabbixWeb:
+          enabled: true
+          service:
+            type: ClusterIP
+        zabbixWebService:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zabbix
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
