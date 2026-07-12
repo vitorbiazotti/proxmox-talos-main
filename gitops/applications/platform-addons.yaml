@@ -105,6 +105,18 @@ metadata:
   labels:
     goldilocks.fairwinds.com/enabled: 'true'
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zabbix-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+    goldilocks.fairwinds.com/enabled: 'true'
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -963,3 +975,70 @@ spec:
     name: zabbix-postgresql
     jsonPointers:
     - "/spec/volumeClaimTemplates"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zabbix-kubernetes
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+spec:
+  project: default
+  source:
+    repoURL: https://cdn.zabbix.com/zabbix/integrations/kubernetes-helm/7.0
+    chart: zabbix-helm-chart
+    targetRevision: 1.3.4
+    helm:
+      releaseName: zabbix-kubernetes
+      values: |
+        kubeStateMetrics:
+          enabled: true
+        zabbixProxy:
+          enabled: true
+          env:
+          - name: ZBX_PROXYMODE
+            value: 0
+          - name: ZBX_HOSTNAME
+            value: zabbix-kubernetes-proxy
+          - name: ZBX_SERVER_HOST
+            value: zabbix-zabbix-server.zabbix.svc.cluster.local
+          - name: ZBX_DEBUGLEVEL
+            value: 3
+          - name: ZBX_CACHESIZE
+            value: 128M
+          - name: ZBX_STARTJAVAPOLLERS
+            value: 0
+          - name: ZBX_PROXYCONFIGFREQUENCY
+            value: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          persistentVolume:
+            enabled: true
+            storageClass: local-path
+            size: 5Gi
+        zabbixAgent:
+          enabled: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zabbix-monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true

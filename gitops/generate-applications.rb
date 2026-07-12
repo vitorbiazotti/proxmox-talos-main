@@ -30,7 +30,7 @@ end
 
 documents = []
 
-privileged_namespaces = ["local-path-provisioner", "metallb-system", "monitoring"]
+privileged_namespaces = ["local-path-provisioner", "metallb-system", "monitoring", "zabbix-monitoring"]
 goldilocks_namespaces = [
   "argocd",
   "argo-events",
@@ -40,7 +40,8 @@ goldilocks_namespaces = [
   "monitoring",
   "observability",
   "policy-reporter",
-  "zabbix"
+  "zabbix",
+  "zabbix-monitoring"
 ]
 
 (privileged_namespaces + goldilocks_namespaces).uniq.sort.each do |namespace|
