@@ -1073,6 +1073,65 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: home-assistant
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  project: default
+  source:
+    repoURL: https://pajikos.github.io/home-assistant-helm-chart/
+    chart: home-assistant
+    targetRevision: 0.3.70
+    helm:
+      releaseName: home-assistant
+      values: |
+        controller:
+          type: StatefulSet
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+        service:
+          type: ClusterIP
+          port: 8080
+        ingress:
+          enabled: false
+          external: true
+        persistence:
+          enabled: true
+          accessMode: ReadWriteOnce
+          size: 10Gi
+          storageClass: longhorn
+        configuration:
+          enabled: true
+          forceInit: false
+          trusted_proxies:
+          - 10.0.0.0/8
+          - 192.168.0.0/16
+        env:
+        - name: TZ
+          value: America/Sao_Paulo
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: jenkins
   namespace: argocd
   annotations:

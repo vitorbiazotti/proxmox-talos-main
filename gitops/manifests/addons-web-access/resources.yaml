@@ -34,6 +34,15 @@ metadata:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: home-assistant
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -56,6 +65,7 @@ spec:
     - zabbix.home.arpa
     - headlamp.home.arpa
     - longhorn.home.arpa
+    - homeassistant.home.arpa
   duration: 8760h
   renewBefore: 720h
   privateKey:
@@ -92,6 +102,7 @@ spec:
         - zabbix.home.arpa
         - headlamp.home.arpa
         - longhorn.home.arpa
+        - homeassistant.home.arpa
       tls:
         httpsRedirect: true
     - port:
@@ -110,6 +121,7 @@ spec:
         - zabbix.home.arpa
         - headlamp.home.arpa
         - longhorn.home.arpa
+        - homeassistant.home.arpa
       tls:
         mode: SIMPLE
         credentialName: addons-home-tls
@@ -294,6 +306,23 @@ spec:
             host: longhorn-frontend.longhorn-system.svc.cluster.local
             port:
               number: 80
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: home-assistant
+  namespace: istio-ingress
+spec:
+  hosts:
+    - homeassistant.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: home-assistant.home-assistant.svc.cluster.local
+            port:
+              number: 8080
 ---
 apiVersion: networking.istio.io/v1
 kind: VirtualService

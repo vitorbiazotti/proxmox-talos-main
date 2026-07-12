@@ -156,6 +156,7 @@ O `helmfile sync` deve ser reservado à implantação inicial ou recuperação. 
 | Longhorn | `longhorn-system` | volumes replicados; StorageClass adicional |
 | Headlamp | `headlamp` | interface geral do Kubernetes |
 | Node Problem Detector | `node-problem-detector` | problemas de kernel, runtime e nós |
+| Home Assistant | `home-assistant` | automação residencial e descoberta mDNS/SSDP |
 
 As versões exatas dos charts estão fixadas em `helmfile.yaml`.
 
@@ -213,6 +214,7 @@ jenkins.home.arpa
 zabbix.home.arpa
 headlamp.home.arpa
 longhorn.home.arpa
+homeassistant.home.arpa
 ```
 
 Teste no Mac:
@@ -255,6 +257,7 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Zabbix | https://zabbix.home.arpa | acesso anônimo de leitura pelo usuário especial `guest` |
 | Headlamp | https://headlamp.home.arpa | token temporário do Kubernetes |
 | Longhorn | https://longhorn.home.arpa | sem login; somente LAN privada |
+| Home Assistant | https://homeassistant.home.arpa | conta criada no primeiro acesso |
 
 O Grafana está configurado para entrar diretamente, sem formulário de login. A conta local continua disponível para recuperação:
 
@@ -313,6 +316,14 @@ kubectl -n headlamp create token headlamp
 ```
 
 Copie o resultado e cole na tela de login do Headlamp. Esse token concede acesso administrativo ao cluster e não deve ser compartilhado.
+
+### Home Assistant
+
+Home Assistant é reconciliado pelo Argo CD a partir do Helmfile. Ele usa um PVC Longhorn de `10Gi`, timezone `America/Sao_Paulo` e `hostNetwork` para descoberta de dispositivos via mDNS/SSDP na rede local.
+
+No AdGuard Home, crie o rewrite `homeassistant.home.arpa` apontando para `192.168.88.160`. Depois acesse https://homeassistant.home.arpa e crie a conta administrativa no assistente inicial.
+
+Esta é a instalação **Home Assistant Container/Core**. Ela não inclui o Supervisor nem a loja de addons do Home Assistant OS; serviços complementares devem ser implantados como aplicações Kubernetes separadas. Dispositivos USB, como coordenadores Zigbee/Z-Wave, exigem mapear o dispositivo físico da VM/nó e fixar o pod nesse nó.
 
 > Argo CD e Argo Workflows estão sem autenticação porque o ambiente é uma LAN privada. Não exponha esses endereços à Internet. Para acesso remoto, use VPN e reative autenticação/SSO.
 
