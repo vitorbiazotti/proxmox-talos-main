@@ -93,10 +93,31 @@ releases.each do |release|
       },
       "syncPolicy" => {
         "automated" => { "prune" => true, "selfHeal" => true },
-        "syncOptions" => ["CreateNamespace=true", "ServerSideApply=true"]
+        "syncOptions" => ["CreateNamespace=true", "ServerSideApply=true", "RespectIgnoreDifferences=true"]
       }
     }
   }
+
+  if ["istio-base", "istiod"].include?(name)
+    application["spec"]["ignoreDifferences"] = [{
+      "group" => "admissionregistration.k8s.io",
+      "kind" => "ValidatingWebhookConfiguration",
+      "jsonPointers" => [
+        "/webhooks/0/clientConfig/caBundle",
+        "/webhooks/0/failurePolicy"
+      ]
+    }]
+  elsif name == "metallb"
+    application["spec"]["ignoreDifferences"] = [{
+      "group" => "apiextensions.k8s.io",
+      "kind" => "CustomResourceDefinition",
+      "name" => "bgppeers.metallb.io",
+      "jsonPointers" => [
+        "/spec/conversion/webhook/clientConfig/caBundle",
+        "/status"
+      ]
+    }]
+  end
 
   documents << application
 end
