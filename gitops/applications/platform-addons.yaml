@@ -10,7 +10,6 @@ metadata:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
 ---
----
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -22,7 +21,6 @@ metadata:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
 ---
----
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -33,7 +31,6 @@ metadata:
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -69,7 +66,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -95,7 +91,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -125,7 +120,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -159,7 +153,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -188,7 +181,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -220,7 +212,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -255,7 +246,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -292,7 +282,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -326,7 +315,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -358,7 +346,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -384,7 +371,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -414,7 +400,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -446,7 +431,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -507,7 +491,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -560,7 +543,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -601,7 +583,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -633,7 +614,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -668,7 +648,6 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
 ---
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -698,7 +677,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
