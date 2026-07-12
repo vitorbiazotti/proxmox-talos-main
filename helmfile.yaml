@@ -283,6 +283,13 @@ releases:
       - mode: daemonset
       - image:
           repository: otel/opentelemetry-collector-contrib
+      - resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
       - presets:
           kubernetesAttributes:
             enabled: true
@@ -290,6 +297,21 @@ releases:
             enabled: true
       - serviceMonitor:
           enabled: true
+      - ports:
+          otlp:
+            hostPort: null
+          otlp-http:
+            hostPort: null
+          jaeger-compact:
+            enabled: false
+          jaeger-thrift:
+            enabled: false
+          jaeger-grpc:
+            enabled: false
+          zipkin:
+            enabled: false
+          metrics:
+            enabled: true
       - config:
           exporters:
             debug: {}
