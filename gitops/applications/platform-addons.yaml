@@ -410,6 +410,9 @@ spec:
     helm:
       releaseName: argo-cd
       values: |
+        global:
+          image:
+            tag: v3.5.0-rc2
         crds:
           install: true
           keep: true

@@ -157,6 +157,9 @@ releases:
     chart: argo/argo-cd
     version: 10.1.3
     values:
+      - global:
+          image:
+            tag: v3.5.0-rc2
       - crds:
           install: true
           keep: true
