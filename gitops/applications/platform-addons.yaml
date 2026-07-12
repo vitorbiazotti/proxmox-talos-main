@@ -416,6 +416,7 @@ spec:
         configs:
           params:
             server.insecure: true
+            server.disable.auth: true
         server:
           service:
             type: ClusterIP
