@@ -140,6 +140,13 @@ releases.each do |release|
       "name" => "zabbix-postgresql",
       "jsonPointers" => ["/spec/volumeClaimTemplates"]
     }]
+  elsif name == "home-assistant"
+    application["spec"]["ignoreDifferences"] = [{
+      "group" => "apps",
+      "kind" => "StatefulSet",
+      "name" => "home-assistant",
+      "jsonPointers" => ["/spec/volumeClaimTemplates"]
+    }]
   end
 
   documents << application

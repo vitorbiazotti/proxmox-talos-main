@@ -1128,6 +1128,12 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: apps
+    kind: StatefulSet
+    name: home-assistant
+    jsonPointers:
+    - "/spec/volumeClaimTemplates"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
