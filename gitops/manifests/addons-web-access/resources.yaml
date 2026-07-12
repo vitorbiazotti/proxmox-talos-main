@@ -135,7 +135,17 @@ spec:
   gateways:
     - addons-web
   http:
-    - route:
+    - match:
+        - uri:
+            exact: /login
+      redirect:
+        uri: /
+    - headers:
+        response:
+          set:
+            Cache-Control: "no-store, no-cache, must-revalidate"
+            Pragma: "no-cache"
+      route:
         - destination:
             host: argo-workflows-server.argo-workflows.svc.cluster.local
             port:

@@ -3,16 +3,16 @@
 ## For more info, read here: https://www.talos.dev/v1.9/talos-guides/install/bare-metal-platforms/secureboot/
 export SECURE_BOOT=false
 export CLUSTER_NAME=my-talos
-export PROXMOX_NODE="pve"
-export DISK_STORAGE="local-zfs"
+export PROXMOX_NODE="proxmox1"
+export DISK_STORAGE="local-lvm"
 export DISK_SIZE="100"
-export RAM_SIZE="8192"
+export RAM_SIZE="16384"
 export CPU_CORES="4"
 export NUMBER_OF_VMS=3
-export VIP_IP=192.168.88.249
-export K8S_VERSION=1.32.0
+export VIP_IP=192.168.88.85
+export K8S_VERSION=1.36.2
 export ROTATE_SERVER_CERTIFICATE=false   ### enable if you want Kubelet CA certificate rotation, for me it did problems, use at your own risk
-export TALOS_VERSION=v1.9.2
+export TALOS_VERSION=v1.13.3
 export TALOS_CONF_DIR=~/myTalosCluster
 export IMAGE_HASH=4c4acaf75b4a51d6ec95b38dc8b49fb0af5f699e7fbd12fbf246821c649b5312
 export TALOS_IMAGE=https://factory.talos.dev/image/$IMAGE_HASH/$TALOS_VERSION/metal-amd64.iso
