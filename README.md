@@ -2,7 +2,7 @@
 
 Este repositório cria um cluster Talos Linux no Proxmox e mantém a plataforma Kubernetes por Helm e Argo CD. Este documento registra o estado implantado em 12/07/2026, os acessos, DNS, credenciais, operação e diagnóstico.
 
-> **Segurança:** senhas não são gravadas em texto puro no Git. As seções de acesso mostram como consultá-las nos Secrets do Kubernetes. A senha `root` do Proxmox que já foi compartilhada deve ser trocada; a operação normal usa chave SSH.
+> **Segurança:** a credencial do Grafana está registrada abaixo em texto puro por decisão do proprietário do homelab. As demais senhas são consultadas nos Secrets do Kubernetes. A senha `root` do Proxmox que já foi compartilhada deve ser trocada; a operação normal usa chave SSH.
 
 ## Estado atual
 
@@ -201,7 +201,7 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Sistema | Link | Autenticação |
 |---|---|---|
 | Argo CD | https://argocd.home.arpa | desabilitada |
-| Grafana | https://grafana.home.arpa | usuário `admin`; senha no Secret |
+| Grafana | https://grafana.home.arpa | usuário `admin`; senha `bwogVt1lIRQwrywA6YAbVg4cBy8kI1dZJiz0Cppo` |
 | Prometheus | https://prometheus.home.arpa | sem login |
 | Alertmanager | https://alertmanager.home.arpa | sem login |
 | Argo Workflows | https://workflows.home.arpa | modo local/server, sem token |
@@ -211,7 +211,14 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Jenkins | https://jenkins.home.arpa | usuário e senha no Secret |
 | Zabbix | https://zabbix.home.arpa | usuário e senha no Secret |
 
-Consultar a senha do Grafana:
+Credenciais atuais do Grafana:
+
+```text
+Usuário: admin
+Senha: bwogVt1lIRQwrywA6YAbVg4cBy8kI1dZJiz0Cppo
+```
+
+Para confirmar a senha diretamente no Secret:
 
 ```bash
 kubectl -n monitoring get secret kube-prometheus-stack-grafana \
