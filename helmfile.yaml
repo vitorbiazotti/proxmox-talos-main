@@ -40,6 +40,16 @@ repositories:
     url: https://zabbix-community.github.io/helm-zabbix
   - name: zabbix-kubernetes
     url: https://cdn.zabbix.com/zabbix/integrations/kubernetes-helm/7.0
+  - name: vmware-tanzu
+    url: https://vmware-tanzu.github.io/helm-charts
+  - name: aqua
+    url: https://aquasecurity.github.io/helm-charts/
+  - name: longhorn
+    url: https://charts.longhorn.io
+  - name: headlamp
+    url: https://kubernetes-sigs.github.io/headlamp/
+  - name: deliveryhero
+    url: https://charts.deliveryhero.io/
 
 releases:
   # Storage and bare-metal load balancer foundations.
@@ -80,6 +90,24 @@ releases:
         args:
           - -c
           - kubectl wait --for=condition=Available --timeout=300s -n metallb-system deployment/metallb-controller && kubectl apply -f metallb-config.yaml
+
+  # Replicated storage. local-path remains the default StorageClass so existing
+  # workloads are not migrated implicitly.
+  - name: longhorn
+    namespace: longhorn-system
+    chart: longhorn/longhorn
+    version: 1.12.0
+    values:
+      - persistence:
+          defaultClass: false
+          defaultClassReplicaCount: 3
+      - defaultSettings:
+          defaultDataPath: /var/lib/longhorn
+          defaultReplicaCount: 3
+          replicaAutoBalance: best-effort
+      - metrics:
+          serviceMonitor:
+            enabled: true
 
   # Istio control plane and ingress data plane.
   - name: istio-base
@@ -405,6 +433,60 @@ releases:
             enabled: true
       - monitoring:
           enabled: true
+
+  # Cluster-native vulnerability and configuration scanning.
+  - name: trivy-operator
+    namespace: trivy-system
+    chart: aqua/trivy-operator
+    version: 0.34.0
+    values:
+      - serviceMonitor:
+          enabled: true
+      - operator:
+          scanJobsConcurrentLimit: 3
+          scanJobTimeout: 10m
+
+  # General-purpose Kubernetes web interface.
+  - name: headlamp
+    namespace: headlamp
+    chart: headlamp/headlamp
+    version: 0.43.0
+    values:
+      - config:
+          inCluster: true
+      - clusterRoleBinding:
+          create: true
+          clusterRoleName: cluster-admin
+
+  # Kubernetes resources and local volume file-system backups. An external
+  # S3-compatible BackupStorageLocation must be configured before scheduling backups.
+  - name: velero
+    namespace: velero
+    chart: vmware-tanzu/velero
+    version: 12.1.0
+    values:
+      - backupsEnabled: false
+      - snapshotsEnabled: false
+      - deployNodeAgent: true
+      - nodeAgent:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+  # Reports kernel, container runtime and node-level problems as NodeConditions/events.
+  - name: node-problem-detector
+    namespace: node-problem-detector
+    chart: deliveryhero/node-problem-detector
+    version: 2.3.14
+    values:
+      - metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
 
   # CI/CD server with persistent controller state and Kubernetes agents.
   - name: jenkins

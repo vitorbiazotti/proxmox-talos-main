@@ -150,6 +150,11 @@ O `helmfile sync` deve ser reservado à implantação inicial ou recuperação. 
 | Zabbix | `zabbix` | servidor, frontend e PostgreSQL |
 | Zabbix Kubernetes | `zabbix-monitoring` | proxy, agentes e kube-state-metrics |
 | local-path-provisioner | `local-path-provisioner` | volumes persistentes locais |
+| Velero | `velero` | backup/restore; destino S3 externo ainda deve ser configurado |
+| Trivy Operator | `trivy-system` | vulnerabilidades, SBOM e auditoria de configuração |
+| Longhorn | `longhorn-system` | volumes replicados; StorageClass adicional |
+| Headlamp | `headlamp` | interface geral do Kubernetes |
+| Node Problem Detector | `node-problem-detector` | problemas de kernel, runtime e nós |
 
 As versões exatas dos charts estão fixadas em `helmfile.yaml`.
 
@@ -170,6 +175,8 @@ goldilocks.home.arpa
 kyverno.home.arpa
 jenkins.home.arpa
 zabbix.home.arpa
+headlamp.home.arpa
+longhorn.home.arpa
 ```
 
 Teste no Mac:
@@ -201,7 +208,7 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Sistema | Link | Autenticação |
 |---|---|---|
 | Argo CD | https://argocd.home.arpa | desabilitada |
-| Grafana | https://grafana.home.arpa | usuário `admin`; senha `bwogVt1lIRQwrywA6YAbVg4cBy8kI1dZJiz0Cppo` |
+| Grafana | https://grafana.home.arpa | usuário `admin`; senha `Grafana-Home-2026!` |
 | Prometheus | https://prometheus.home.arpa | sem login |
 | Alertmanager | https://alertmanager.home.arpa | sem login |
 | Argo Workflows | https://workflows.home.arpa | modo local/server, sem token |
@@ -210,12 +217,14 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Kyverno/Policy Reporter | https://kyverno.home.arpa | sem login |
 | Jenkins | https://jenkins.home.arpa | usuário e senha no Secret |
 | Zabbix | https://zabbix.home.arpa | usuário e senha no Secret |
+| Headlamp | https://headlamp.home.arpa | token temporário do Kubernetes |
+| Longhorn | https://longhorn.home.arpa | sem login; somente LAN privada |
 
 Credenciais atuais do Grafana:
 
 ```text
 Usuário: admin
-Senha: bwogVt1lIRQwrywA6YAbVg4cBy8kI1dZJiz0Cppo
+Senha: Grafana-Home-2026!
 ```
 
 Para confirmar a senha diretamente no Secret:
@@ -244,6 +253,14 @@ kubectl -n zabbix get secret zabbix-admin-credentials \
 ```
 
 O Secret `zabbix-admin-credentials` é um registro operacional criado no cluster e não é versionado. Se o banco do Zabbix for recriado, redefina a senha e atualize esse Secret.
+
+Gerar um token temporário para entrar no Headlamp:
+
+```bash
+kubectl -n headlamp create token headlamp
+```
+
+Copie o resultado e cole na tela de login do Headlamp. Esse token concede acesso administrativo ao cluster e não deve ser compartilhado.
 
 > Argo CD e Argo Workflows estão sem autenticação porque o ambiente é uma LAN privada. Não exponha esses endereços à Internet. Para acesso remoto, use VPN e reative autenticação/SSO.
 
@@ -357,7 +374,7 @@ kubectl get events -A --sort-by='.lastTimestamp' | tail -50
 Teste todos os endpoints:
 
 ```bash
-for host in argocd grafana prometheus alertmanager workflows rollouts goldilocks kyverno jenkins zabbix; do
+for host in argocd grafana prometheus alertmanager workflows rollouts goldilocks kyverno jenkins zabbix headlamp longhorn; do
   printf '%-15s ' "$host"
   curl -k -sS -o /dev/null -w '%{http_code}\n' "https://$host.home.arpa/"
 done

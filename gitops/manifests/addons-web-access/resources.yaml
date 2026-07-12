@@ -1,3 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn-system
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: velero
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -18,6 +36,8 @@ spec:
     - kyverno.home.arpa
     - jenkins.home.arpa
     - zabbix.home.arpa
+    - headlamp.home.arpa
+    - longhorn.home.arpa
   duration: 8760h
   renewBefore: 720h
   privateKey:
@@ -52,6 +72,8 @@ spec:
         - kyverno.home.arpa
         - jenkins.home.arpa
         - zabbix.home.arpa
+        - headlamp.home.arpa
+        - longhorn.home.arpa
       tls:
         httpsRedirect: true
     - port:
@@ -68,6 +90,8 @@ spec:
         - kyverno.home.arpa
         - jenkins.home.arpa
         - zabbix.home.arpa
+        - headlamp.home.arpa
+        - longhorn.home.arpa
       tls:
         mode: SIMPLE
         credentialName: addons-home-tls
@@ -218,6 +242,40 @@ spec:
             host: jenkins.jenkins.svc.cluster.local
             port:
               number: 8080
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: headlamp
+  namespace: istio-ingress
+spec:
+  hosts:
+    - headlamp.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: headlamp.headlamp.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: longhorn
+  namespace: istio-ingress
+spec:
+  hosts:
+    - longhorn.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: longhorn-frontend.longhorn-system.svc.cluster.local
+            port:
+              number: 80
 ---
 apiVersion: networking.istio.io/v1
 kind: VirtualService
