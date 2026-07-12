@@ -208,19 +208,19 @@ sudo security add-trusted-cert -d -r trustRoot \
 | Sistema | Link | Autenticação |
 |---|---|---|
 | Argo CD | https://argocd.home.arpa | desabilitada |
-| Grafana | https://grafana.home.arpa | usuário `admin`; senha `Grafana-Home-2026!` |
+| Grafana | https://grafana.home.arpa | sem login; acesso anônimo administrativo |
 | Prometheus | https://prometheus.home.arpa | sem login |
 | Alertmanager | https://alertmanager.home.arpa | sem login |
 | Argo Workflows | https://workflows.home.arpa | modo local/server, sem token |
 | Argo Rollouts | https://rollouts.home.arpa | sem login |
 | Goldilocks | https://goldilocks.home.arpa | sem login |
 | Kyverno/Policy Reporter | https://kyverno.home.arpa | sem login |
-| Jenkins | https://jenkins.home.arpa | usuário e senha no Secret |
-| Zabbix | https://zabbix.home.arpa | usuário e senha no Secret |
+| Jenkins | https://jenkins.home.arpa | sem login; acesso anônimo administrativo |
+| Zabbix | https://zabbix.home.arpa | acesso anônimo de leitura pelo usuário especial `guest` |
 | Headlamp | https://headlamp.home.arpa | token temporário do Kubernetes |
 | Longhorn | https://longhorn.home.arpa | sem login; somente LAN privada |
 
-Credenciais atuais do Grafana:
+O Grafana está configurado para entrar diretamente, sem formulário de login. A conta local continua disponível para recuperação:
 
 ```text
 Usuário: admin
@@ -253,6 +253,22 @@ kubectl -n zabbix get secret zabbix-admin-credentials \
 ```
 
 O Secret `zabbix-admin-credentials` é um registro operacional criado no cluster e não é versionado. Se o banco do Zabbix for recriado, redefina a senha e atualize esse Secret.
+
+Credenciais atuais do Jenkins:
+
+```text
+Usuário: admin
+Senha: yPCdSjysKwnqUsmK7drqqk
+```
+
+Credenciais atuais do Zabbix:
+
+```text
+Usuário: Admin
+Senha: XQ8yit1WsN1XWqk0bk0bESC
+```
+
+As contas acima permanecem como recuperação administrativa. Jenkins está com a estratégia `unsecured`, que concede controle total anônimo. No Zabbix, `guest` tem leitura dos grupos de hosts, enquanto alterações administrativas ainda exigem a conta `Admin`.
 
 Gerar um token temporário para entrar no Headlamp:
 

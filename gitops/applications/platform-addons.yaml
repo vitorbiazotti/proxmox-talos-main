@@ -691,6 +691,12 @@ spec:
             enabled: true
             storageClassName: local-path
             size: 10Gi
+          grafana.ini:
+            auth:
+              disable_login_form: true
+            auth.anonymous:
+              enabled: true
+              org_role: Admin
           additionalDataSources:
           - name: Loki
             type: loki
@@ -1068,6 +1074,8 @@ spec:
       values: |
         controller:
           serviceType: ClusterIP
+          JCasC:
+            authorizationStrategy: unsecured
           resources:
             requests:
               cpu: 500m
