@@ -882,3 +882,9 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: apps
+    kind: StatefulSet
+    name: zabbix-postgresql
+    jsonPointers:
+    - "/spec/volumeClaimTemplates"

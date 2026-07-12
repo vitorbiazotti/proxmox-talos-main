@@ -117,6 +117,13 @@ releases.each do |release|
         "/status"
       ]
     }]
+  elsif name == "zabbix"
+    application["spec"]["ignoreDifferences"] = [{
+      "group" => "apps",
+      "kind" => "StatefulSet",
+      "name" => "zabbix-postgresql",
+      "jsonPointers" => ["/spec/volumeClaimTemplates"]
+    }]
   end
 
   documents << application
