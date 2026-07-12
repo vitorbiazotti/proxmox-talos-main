@@ -458,6 +458,16 @@ releases:
           # paths expected by Trivy's node collector.
           infraAssessmentScannerEnabled: false
           clusterComplianceEnabled: false
+      - trivy:
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+              ephemeral-storage: 1Gi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+              ephemeral-storage: 4Gi
 
   # General-purpose Kubernetes web interface.
   - name: headlamp

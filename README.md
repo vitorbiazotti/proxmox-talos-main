@@ -165,6 +165,8 @@ Na conferência de 12/07/2026, todos os 29 addons estavam nas versões mais rece
 
 No Talos, a avaliação de vulnerabilidades, SBOM, configurações e RBAC do Trivy permanece ativa. Somente `infraAssessmentScanner` e `clusterCompliance` ficam desativados, pois o node collector pressupõe diretórios de distribuições com systemd/kubeadm que não existem no sistema imutável Talos.
 
+Os scan jobs são executados individualmente e possuem request de `512Mi` e limite de `2Gi` de memória. Esses valores evitam o OOM que ocorria com o limite padrão de `500M` durante a análise de imagens maiores.
+
 ### Consultar o Trivy
 
 Trivy Operator não possui interface web própria. Ele grava os resultados como recursos Kubernetes:
