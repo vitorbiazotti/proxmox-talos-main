@@ -3,16 +3,16 @@
 ## For more info, read here: https://www.talos.dev/v1.9/talos-guides/install/bare-metal-platforms/secureboot/
 export SECURE_BOOT=false
 export CLUSTER_NAME=my-talos
-export PROXMOX_NODE="proxmox1"
-export DISK_STORAGE="local-lvm"
+export PROXMOX_NODE="pve"
+export DISK_STORAGE="local-zfs"
 export DISK_SIZE="100"
 export RAM_SIZE="8192"
 export CPU_CORES="4"
 export NUMBER_OF_VMS=3
-export VIP_IP=192.168.88.85
-export K8S_VERSION=1.36.2
+export VIP_IP=192.168.88.249
+export K8S_VERSION=1.32.0
 export ROTATE_SERVER_CERTIFICATE=false   ### enable if you want Kubelet CA certificate rotation, for me it did problems, use at your own risk
-export TALOS_VERSION=v1.13.3
+export TALOS_VERSION=v1.9.2
 export TALOS_CONF_DIR=~/myTalosCluster
 export IMAGE_HASH=4c4acaf75b4a51d6ec95b38dc8b49fb0af5f699e7fbd12fbf246821c649b5312
 export TALOS_IMAGE=https://factory.talos.dev/image/$IMAGE_HASH/$TALOS_VERSION/metal-amd64.iso
@@ -197,7 +197,6 @@ stop_vms() {
 
 prepare_talos_config() {
     mkdir -p $TALOS_CONF_DIR && cd $TALOS_CONF_DIR
-    rm -f secrets.yaml controlplane.yaml worker.yaml talosconfig
     mkdir -p ~/.talos && mkdir -p patches
     local sleep_interval=3
     local all_ips_found=false
@@ -422,19 +421,28 @@ machine:
         - slot: 0
           nodeID: {}
 EOF
+cat > patches/18-remove_admission_control.yaml << "EOF"
+- op: remove
+  path: /cluster/apiServer/admissionControl
+EOF
+
     talosctl gen secrets
     talosctl gen config talos-proxmox-cluster https://$VIP_IP:6443 \
       --kubernetes-version $K8S_VERSION \
       --install-image $INSTALL_IMAGE \
+      --config-patch-control-plane '[{"op": "remove", "path": "/cluster/apiServer/admissionControl"}]' \
       --with-kubespan --with-secrets secrets.yaml \
       --config-patch-control-plane @patches/5-vip.yaml \
+      --config-patch-control-plane @patches/15-enable-metrics-cp.yaml \
       --config-patch @patches/1-allow-scheduling-on-cp.yaml \
+      --config-patch @patches/3-interface-names.yaml \
       --config-patch @patches/4-ensure-dhcp.yaml \
       --config-patch @patches/7-install-disk.yaml \
       --config-patch @patches/9-local-path-profisioner.yaml \
       --config-patch @patches/12-remove-exclude-from-external-load-balancers-label.yaml \
       --config-patch @patches/11-valid-subnets.yaml \
       --config-patch @patches/13-patch-sans.yaml \
+      --config-patch @patches/16-config-mirrors.yaml \
       --config-patch @patches/14-enable-hostdns.yaml
       # --config-patch @patches/17-enable-disk-encryption-tpm.yaml \
       # --config-patch @patches/15-enable-metrics-wn.yaml \
@@ -466,7 +474,8 @@ bootstrap_talos_cluster(){
         fi
         sleep 2
         talosctl apply-config \
-            --insecure --nodes $node --file controlplane.yaml
+            --insecure --nodes $node --file controlplane.yaml \
+            --config-patch "[{\"op\": \"replace\", \"path\": \"/machine/network/hostname\", \"value\": \"$hostname\"}]"
         echo -e "${BLUE}[$(date +%Y-%m-%d.%H:%M:%S)]${NC} \xE2\x9C\x85 Config was succesfully applied on ${GREEN}$hostname${NC}"
     done
     remove_cdrom
