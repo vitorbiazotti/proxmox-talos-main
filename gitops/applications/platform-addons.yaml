@@ -940,8 +940,10 @@ spec:
         serviceMonitor:
           enabled: true
         operator:
-          scanJobsConcurrentLimit: 3
-          scanJobTimeout: 10m
+          scanJobsConcurrentLimit: 1
+          scanJobTimeout: 20m
+          infraAssessmentScannerEnabled: false
+          clusterComplianceEnabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: trivy-system
@@ -1146,6 +1148,11 @@ spec:
           enabled: true
           service:
             type: ClusterIP
+          extraEnv:
+          - name: ZBX_SERVER_HOST
+            value: zabbix-zabbix-server
+          - name: ZBX_SERVER_PORT
+            value: '10051'
         zabbixWebService:
           enabled: true
   destination:

@@ -230,7 +230,7 @@ machine:
       rotate-server-certificates: $ROTATE_SERVER_CERTIFICATE
 cluster:
   extraManifests:
-    - https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/main/deploy/standalone-install.yaml
+    - https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/v0.11.0/deploy/standalone-install.yaml
 EOF
 
 cat > patches/3-interface-names.yaml << "EOF"

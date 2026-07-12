@@ -451,8 +451,12 @@ releases:
       - serviceMonitor:
           enabled: true
       - operator:
-          scanJobsConcurrentLimit: 3
-          scanJobTimeout: 10m
+          scanJobsConcurrentLimit: 1
+          scanJobTimeout: 20m
+          # Talos is immutable and does not expose the systemd/kubeadm host
+          # paths expected by Trivy's node collector.
+          infraAssessmentScannerEnabled: false
+          clusterComplianceEnabled: false
 
   # General-purpose Kubernetes web interface.
   - name: headlamp
@@ -558,6 +562,11 @@ releases:
           enabled: true
           service:
             type: ClusterIP
+          extraEnv:
+            - name: ZBX_SERVER_HOST
+              value: zabbix-zabbix-server
+            - name: ZBX_SERVER_PORT
+              value: "10051"
       - zabbixWebService:
           enabled: true
 
