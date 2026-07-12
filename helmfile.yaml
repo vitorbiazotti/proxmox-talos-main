@@ -98,6 +98,8 @@ releases:
     chart: longhorn/longhorn
     version: 1.12.0
     values:
+      - preUpgradeChecker:
+          jobEnabled: false
       - persistence:
           defaultClass: false
           defaultClassReplicaCount: 3
