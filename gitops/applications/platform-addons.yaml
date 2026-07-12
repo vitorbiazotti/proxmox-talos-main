@@ -1117,6 +1117,7 @@ spec:
     helm:
       releaseName: zabbix
       values: |
+        zabbixImageTag: ubuntu-7.4.12
         postgresAccess:
           existingSecretName: zabbix-postgres-access
         postgresql:
@@ -1185,6 +1186,8 @@ spec:
           enabled: true
         zabbixProxy:
           enabled: true
+          image:
+            tag: alpine-7.4.12
           env:
           - name: ZBX_PROXYMODE
             value: 0
@@ -1213,6 +1216,8 @@ spec:
             size: 5Gi
         zabbixAgent:
           enabled: true
+          image:
+            tag: alpine-7.4.12
           resources:
             requests:
               cpu: 50m

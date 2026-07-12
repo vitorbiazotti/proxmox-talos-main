@@ -12,6 +12,7 @@ Este repositório cria um cluster Talos Linux no Proxmox e mantém a plataforma 
 | Cluster | `my-talos` |
 | Talos | `v1.13.3` |
 | Kubernetes | `v1.36.2` |
+| Zabbix | `7.4.12` |
 | API Kubernetes (VIP) | `192.168.88.85:6443` |
 | VMs | IDs `901`, `902` e `903` |
 | IPs dos nós | `192.168.88.116`, `.117` e `.118` |
@@ -147,8 +148,8 @@ O `helmfile sync` deve ser reservado à implantação inicial ou recuperação. 
 | External Secrets | `external-secrets` | sincronização de secrets externos |
 | Goldilocks | `goldilocks` | recomendações de CPU e memória |
 | Jenkins | `jenkins` | CI/CD |
-| Zabbix | `zabbix` | servidor, frontend e PostgreSQL |
-| Zabbix Kubernetes | `zabbix-monitoring` | proxy, agentes e kube-state-metrics |
+| Zabbix 7.4.12 | `zabbix` | servidor, frontend e PostgreSQL |
+| Zabbix Kubernetes 7.4.12 | `zabbix-monitoring` | proxy, agentes e kube-state-metrics |
 | local-path-provisioner | `local-path-provisioner` | volumes persistentes locais |
 | Velero | `velero` | backup/restore; destino S3 externo ainda deve ser configurado |
 | Trivy Operator | `trivy-system` | vulnerabilidades, SBOM e auditoria de configuração |

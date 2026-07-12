@@ -529,6 +529,7 @@ releases:
     needs:
       - local-path-provisioner/local-path-provisioner
     values:
+      - zabbixImageTag: ubuntu-7.4.12
       - postgresAccess:
           existingSecretName: zabbix-postgres-access
       - postgresql:
@@ -572,6 +573,8 @@ releases:
           enabled: true
       - zabbixProxy:
           enabled: true
+          image:
+            tag: alpine-7.4.12
           env:
             - name: ZBX_PROXYMODE
               value: 0
@@ -600,6 +603,8 @@ releases:
             size: 5Gi
       - zabbixAgent:
           enabled: true
+          image:
+            tag: alpine-7.4.12
           resources:
             requests:
               cpu: 50m
