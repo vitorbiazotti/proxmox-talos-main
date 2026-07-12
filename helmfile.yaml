@@ -199,6 +199,8 @@ releases:
           install: true
       - server:
           serviceType: ClusterIP
+          authModes:
+            - server
 
   # Logs and metrics.
   - name: loki

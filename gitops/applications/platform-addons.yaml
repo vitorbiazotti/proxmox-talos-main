@@ -2,6 +2,51 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: argo-events
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argo-rollouts
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argo-workflows
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jenkins
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: local-path-provisioner
   annotations:
     argocd.argoproj.io/sync-wave: "-100"
@@ -31,6 +76,34 @@ metadata:
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: policy-reporter
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zabbix
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+  labels:
+    goldilocks.fairwinds.com/enabled: 'true'
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -455,6 +528,8 @@ spec:
           install: true
         server:
           serviceType: ClusterIP
+          authModes:
+          - server
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

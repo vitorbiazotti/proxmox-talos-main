@@ -30,22 +30,37 @@ end
 
 documents = []
 
-{
-  "local-path-provisioner" => "privileged",
-  "metallb-system" => "privileged",
-  "monitoring" => "privileged"
-}.each do |namespace, level|
+privileged_namespaces = ["local-path-provisioner", "metallb-system", "monitoring"]
+goldilocks_namespaces = [
+  "argocd",
+  "argo-events",
+  "argo-rollouts",
+  "argo-workflows",
+  "jenkins",
+  "monitoring",
+  "observability",
+  "policy-reporter",
+  "zabbix"
+]
+
+(privileged_namespaces + goldilocks_namespaces).uniq.sort.each do |namespace|
+  labels = {}
+  if privileged_namespaces.include?(namespace)
+    labels.merge!(
+      "pod-security.kubernetes.io/enforce" => "privileged",
+      "pod-security.kubernetes.io/audit" => "privileged",
+      "pod-security.kubernetes.io/warn" => "privileged"
+    )
+  end
+  labels["goldilocks.fairwinds.com/enabled"] = "true" if goldilocks_namespaces.include?(namespace)
+
   documents << {
     "apiVersion" => "v1",
     "kind" => "Namespace",
     "metadata" => {
       "name" => namespace,
       "annotations" => { "argocd.argoproj.io/sync-wave" => "-100" },
-      "labels" => {
-        "pod-security.kubernetes.io/enforce" => level,
-        "pod-security.kubernetes.io/audit" => level,
-        "pod-security.kubernetes.io/warn" => level
-      }
+      "labels" => labels
     }
   }
 end
