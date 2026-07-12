@@ -74,7 +74,8 @@ releases:
 
   - name: metallb
     namespace: metallb-system
-    chart: ./charts/metallb
+    chart: metallb/metallb
+    version: 0.16.1
     needs:
       - local-path-provisioner/local-path-provisioner
     hooks:

@@ -161,14 +161,36 @@ As versões exatas dos charts estão fixadas em `helmfile.yaml`.
 
 ### Auditoria de versões
 
-Na conferência de 12/07/2026, todos os 27 charts provenientes de repositórios Helm estavam na versão mais recente disponível. As duas exceções são charts incorporados ao próprio repositório:
-
-- MetalLB local: `0.14.9`; upstream mais recente: `0.16.1`;
-- local-path-provisioner local: `0.0.31`; upstream mais recente: `0.0.36`.
-
-Eles não foram atualizados automaticamente porque são componentes fundamentais de rede e armazenamento e os charts locais contêm customizações. Argo CD usa o chart mais recente (`10.1.3`) com a imagem `v3.5.0-rc2` solicitada explicitamente. Zabbix usa o chart mais recente (`7.1.0`) com todas as imagens fixadas em `7.4.12`.
+Na conferência de 12/07/2026, todos os 29 addons estavam nas versões mais recentes disponíveis. MetalLB usa o chart oficial `0.16.1`; o chart local customizado do local-path-provisioner usa imagem e versão `0.0.36`. Argo CD usa o chart mais recente (`10.1.3`) com a imagem `v3.5.0-rc2` solicitada explicitamente. Zabbix usa o chart mais recente (`7.1.0`) com todas as imagens fixadas em `7.4.12`.
 
 No Talos, a avaliação de vulnerabilidades, SBOM, configurações e RBAC do Trivy permanece ativa. Somente `infraAssessmentScanner` e `clusterCompliance` ficam desativados, pois o node collector pressupõe diretórios de distribuições com systemd/kubeadm que não existem no sistema imutável Talos.
+
+### Consultar o Trivy
+
+Trivy Operator não possui interface web própria. Ele grava os resultados como recursos Kubernetes:
+
+```bash
+# Resumo e quantidade de relatórios.
+kubectl get vulnerabilityreports -A
+kubectl get configauditreports -A
+kubectl get rbacassessmentreports -A
+kubectl get exposedsecretreports -A
+kubectl get sbomreports -A
+
+# Ver os detalhes de um relatório.
+kubectl -n NAMESPACE describe vulnerabilityreport NOME
+kubectl -n NAMESPACE get vulnerabilityreport NOME -o yaml
+
+# Vulnerabilidades críticas e altas de todos os namespaces.
+kubectl get vulnerabilityreports -A -o json | jq -r '
+  .items[] |
+  select((.report.summary.criticalCount // 0) > 0 or (.report.summary.highCount // 0) > 0) |
+  [.metadata.namespace, .metadata.name,
+   (.report.summary.criticalCount // 0),
+   (.report.summary.highCount // 0)] | @tsv'
+```
+
+As métricas do operador são coletadas pelo Prometheus. No Grafana, use **Explore → Prometheus** e pesquise métricas que começam com `trivy_`.
 
 ## DNS no UCG Fiber e AdGuard Home
 
