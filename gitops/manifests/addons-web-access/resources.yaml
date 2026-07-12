@@ -1,0 +1,167 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: addons-home-tls
+  namespace: istio-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  secretName: addons-home-tls
+  commonName: addons.home.arpa
+  dnsNames:
+    - grafana.home.arpa
+    - prometheus.home.arpa
+    - alertmanager.home.arpa
+    - workflows.home.arpa
+    - rollouts.home.arpa
+    - goldilocks.home.arpa
+  duration: 8760h
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: homelab-ca
+    kind: ClusterIssuer
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: addons-web
+  namespace: istio-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  selector:
+    istio: ingress
+  servers:
+    - port:
+        number: 80
+        name: http-addons
+        protocol: HTTP
+      hosts:
+        - grafana.home.arpa
+        - prometheus.home.arpa
+        - alertmanager.home.arpa
+        - workflows.home.arpa
+        - rollouts.home.arpa
+        - goldilocks.home.arpa
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https-addons
+        protocol: HTTPS
+      hosts:
+        - grafana.home.arpa
+        - prometheus.home.arpa
+        - alertmanager.home.arpa
+        - workflows.home.arpa
+        - rollouts.home.arpa
+        - goldilocks.home.arpa
+      tls:
+        mode: SIMPLE
+        credentialName: addons-home-tls
+        minProtocolVersion: TLSV1_2
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: grafana
+  namespace: istio-ingress
+spec:
+  hosts:
+    - grafana.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: prometheus
+  namespace: istio-ingress
+spec:
+  hosts:
+    - prometheus.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
+            port:
+              number: 9090
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: alertmanager
+  namespace: istio-ingress
+spec:
+  hosts:
+    - alertmanager.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: kube-prometheus-stack-alertmanager.monitoring.svc.cluster.local
+            port:
+              number: 9093
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: workflows
+  namespace: istio-ingress
+spec:
+  hosts:
+    - workflows.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: argo-workflows-server.argo-workflows.svc.cluster.local
+            port:
+              number: 2746
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: rollouts
+  namespace: istio-ingress
+spec:
+  hosts:
+    - rollouts.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: argo-rollouts-dashboard.argo-rollouts.svc.cluster.local
+            port:
+              number: 3100
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: goldilocks
+  namespace: istio-ingress
+spec:
+  hosts:
+    - goldilocks.home.arpa
+  gateways:
+    - addons-web
+  http:
+    - route:
+        - destination:
+            host: goldilocks-dashboard.goldilocks.svc.cluster.local
+            port:
+              number: 80
