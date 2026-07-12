@@ -1,0 +1,108 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: homelab-selfsigned
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homelab-root-ca
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  isCA: true
+  commonName: Homelab Root CA
+  secretName: homelab-root-ca
+  duration: 87600h
+  renewBefore: 8760h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: homelab-selfsigned
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: homelab-ca
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  ca:
+    secretName: homelab-root-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-home-tls
+  namespace: istio-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  secretName: argocd-home-tls
+  commonName: argocd.home.arpa
+  dnsNames:
+    - argocd.home.arpa
+  duration: 8760h
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: homelab-ca
+    kind: ClusterIssuer
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: argocd
+  namespace: istio-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  selector:
+    istio: ingress
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - argocd.home.arpa
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - argocd.home.arpa
+      tls:
+        mode: SIMPLE
+        credentialName: argocd-home-tls
+        minProtocolVersion: TLSV1_2
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: argocd
+  namespace: istio-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  hosts:
+    - argocd.home.arpa
+  gateways:
+    - argocd
+  http:
+    - route:
+        - destination:
+            host: argo-cd-argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80

@@ -152,6 +152,9 @@ releases:
       - crds:
           install: true
           keep: true
+      - configs:
+          params:
+            server.insecure: true
       - server:
           service:
             type: ClusterIP
