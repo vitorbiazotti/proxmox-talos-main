@@ -15,7 +15,7 @@ Este repositório cria um cluster Talos Linux no Proxmox e mantém a plataforma 
 | Zabbix | `7.4.12` |
 | API Kubernetes (VIP) | `192.168.88.85:6443` |
 | VMs | IDs `901`, `902` e `903` |
-| IPs dos nós | `192.168.88.115`, `.117` e `.118` |
+| IPs dos nós | `192.168.88.116`, `.117` e `.118` |
 | Recursos por VM | 4 vCPU, 16 GiB RAM e disco de 100 GiB |
 | Storage Proxmox | `local-lvm` |
 | StorageClass Kubernetes | `local-path` (padrão) |
